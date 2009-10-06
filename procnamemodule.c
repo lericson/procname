@@ -20,7 +20,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+/* This makes the "s#" format for PyArg_ParseTuple and such take a Py_ssize_t
+ * instead of an int or whatever. */
+#define PY_SSIZE_T_CLEAN
+
 #include <Python.h>
+
+/* Py_ssize_t appeared in Python 2.5. */
+#ifndef PY_SSIZE_T_MAX
+typedef ssize_t Py_ssize_t;
+#endif
+
+/* XXX This macro doesn't work anywhere. */
 #if defined(_GNU_SOURCE) && !defined(_DARWIN_C_SOURCE)
 #  include <sys/prctl.h>
 #endif
