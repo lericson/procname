@@ -75,6 +75,21 @@ static PyMethodDef procname_methods[] = {
 
 PyDoc_STRVAR(procname__doc__, "Module for setting/getting process name");
 
+#if PY_VERSION_HEX >= 0x03000000
+static struct PyModuleDef procname_module_def = {
+    PyModuleDef_HEAD_INIT,
+    "procname",
+    procname__doc__,
+    -1,
+    procname_methods,
+    NULL, NULL, NULL, NULL
+};
+
+PyMODINIT_FUNC PyInit_procname(void) {
+    return PyModule_Create(&procname_module_def);
+}
+#else  /* Python 2.x */
 PyMODINIT_FUNC initprocname(void) {
     Py_InitModule3("procname", procname_methods, procname__doc__);
 }
+#endif
