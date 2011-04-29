@@ -32,7 +32,7 @@ typedef ssize_t Py_ssize_t;
 #endif
 
 /* XXX This macro doesn't work anywhere. */
-#if defined(_GNU_SOURCE) && !defined(_DARWIN_C_SOURCE)
+#ifdef __linux
 #  include <sys/prctl.h>
 #endif
 
@@ -66,7 +66,7 @@ static PyObject *procname_setprocname(PyObject *self, PyObject *args) {
     strncpy(arg0, name, (size_t)name_sz);
     memset(arg0 + name_sz, 0, strlen(arg0 + name_sz));
 
-#if defined(_GNU_SOURCE) && !defined(_DARWIN_C_SOURCE)
+#ifdef __linux
     /* Use the much nicer prctl API where possible (GNU/Linux.) */
     if (prctl(PR_SET_NAME, name, 0, 0, 0)) {
         PyErr_SetFromErrno(PyExc_OSError);
