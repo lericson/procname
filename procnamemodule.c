@@ -31,9 +31,8 @@
 typedef ssize_t Py_ssize_t;
 #endif
 
-/* XXX This macro doesn't work anywhere. */
 #ifdef __linux
-#  include <sys/prctl.h>
+#include <sys/prctl.h>
 #endif
 
 /* This is actually not an exposed Python API, but it's been there since the
@@ -50,24 +49,28 @@ static PyObject *procname_getprocname(PyObject *self, PyObject *args) {
 static PyObject *procname_setprocname(PyObject *self, PyObject *args) {
     int argc, argn;
     char **argv;
-    char *arg0, *arg, *name;
-    Py_ssize_t buflen, name_sz;
+    char *name;
+    Py_ssize_t buflen;
 
-    if (!PyArg_ParseTuple(args, "s#", &name, &name_sz)) {
+    if (!PyArg_ParseTuple(args, "s", &name)) {
         return NULL;
     }
 
     Py_GetArgcArgv(&argc, &argv);
-    arg0 = *argv;
-    for (argn = buflen = 0, arg = argv[argn]; argn < argc; argn++) {
-        buflen += (Py_ssize_t)strlen(arg);
+    for (argn = buflen = 0; argn < argc; argn++) {
+        buflen += (Py_ssize_t)strlen(argv[argn]) + 1;
     }
-    name_sz = (buflen < name_sz) ? buflen : name_sz;
-    strncpy(arg0, name, (size_t)name_sz);
-    memset(arg0 + name_sz, 0, strlen(arg0 + name_sz));
+    strncpy(*argv, name, (size_t)buflen - 1);
+    if (buflen > 0) {
+        argv[0][buflen - 1]= '\0';
+    }
 
 #ifdef __linux
-    /* Use the much nicer prctl API where possible (GNU/Linux.) */
+    /* Use the much nicer prctl API where possible (GNU/Linux.)
+       Note: Rather than overwriting argv as above, this sets task_struct.comm which is fixed at 16 bytes.
+       Not quite the same!
+       prctl() with PR_SET_MM and PR_SET_MM_ARG_START/PR_SET_MM_ARG_END could work, but would require
+       `setcap 'CAP_SYS_RESOURCE=+ep'`. */
     if (prctl(PR_SET_NAME, name, 0, 0, 0)) {
         PyErr_SetFromErrno(PyExc_OSError);
     }
