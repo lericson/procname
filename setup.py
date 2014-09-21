@@ -1,4 +1,4 @@
-from distutils.core import setup, Extension
+from setuptools import setup, Extension
 
 readme_conts = open("README.rst", "U").read()
 
